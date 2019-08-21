@@ -63,19 +63,19 @@ def get_column_names(table, c):
     return names
 
 
-def __rechunk(data, rows=1000):
+def __rechunk(data, rows=10000):
     for i in range(0, len(data), rows):
         yield data[i:i + rows]
     # used to re-chunk array into splitNum nths divisions
 
 
 def __insert_all(models_, cur, sql):
-    
+    start = time.perf_counter()
 
     models_values = [list(model.data.values()) for model in models_]  # retrieve all data params from models
 
     if len(models_values) > 1000:
-        models_chunked = list(__rechunk(models_values))  # Split each row into 1000 rows each list
+        models_chunked = list(__rechunk(models_values, 1000))  # Split each row into 1000 rows each list
         models_values.clear()
 
         for data in models_chunked:
@@ -147,9 +147,12 @@ def get_last_id(model):
     records = cur.fetchall()
     if len(records) == 0:
         return '-1'
-    c.close()
+    id_ = str(records[0][model.getKeys().index('id')])
 
-    return records[0][model.getKeys().index('id')]
+    if (id_ is None) or id_.replace(' ', '') == '':
+        return '-1'
+    else:
+        return id_
 
 
 def fetch_items(table, sql):
@@ -204,7 +207,7 @@ class DbModelR:
         else:
             self.data = data
         if id:
-            
+
             if (self.data.get('id') is None) or self.data.get('id').replace(' ', '') == '':
                 self.data['id'] = 0
 
@@ -249,7 +252,7 @@ def __populate(table, col_a, row_a):
 # Used to populate a table with dummy data but with custom column names. And implements last_id for future expansion
 def __populate_custom(table, cols, row_a):
     datas = []
-    id = get_last_id(DbModelR(table, {}))
+    id = int(get_last_id(DbModelR(table, {})))
     data = {}
 
     for n in range(row_a):
@@ -258,7 +261,7 @@ def __populate_custom(table, cols, row_a):
         for i in cols:
             data[i] = str(random.randrange(1000))
         data['id'] = str(id)
-        datas.append(DbModelR(table, data.copy()))
+        datas.append(DbModelR(table, data.copy(), id=False))
 
         data.clear()
     add_models(datas)
@@ -266,4 +269,6 @@ def __populate_custom(table, cols, row_a):
 
 if __name__ == '__main__':
     # example of dynamic entry
-    print(get_last_id(DbModelR('Parts', {'invoiceID': ''}, id=False)))
+    model = create_empty_model('Users', ['Name', 'Age', 'Score'])
+    add_models(model)
+
