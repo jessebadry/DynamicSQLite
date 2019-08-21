@@ -70,8 +70,6 @@ def __rechunk(data, rows=10000):
 
 
 def __insert_all(models_, cur, sql):
-    start = time.perf_counter()
-
     models_values = [list(model.data.values()) for model in models_]  # retrieve all data params from models
 
     if len(models_values) > 1000:
@@ -188,12 +186,9 @@ def load_table_limit(table, limit):
 
 
 def load_table(table):
-    c = sqlite3.connect('db.sqlite3')
-    cur = c.cursor()
-    cur.execute('SELECT * FROM ' + table)
-
-    names = get_column_names(table, c)
-    return fetch_items(table, names, c, cur)
+    sql = 'SELECT * FROM ' + table
+    items = fetch_items(table, sql)
+    return items
 
 
 class DbModelR:
@@ -240,7 +235,7 @@ def __populate(table, col_a, row_a):
 
         for i in range(len(names)):
             vals.append(str(random.randrange(1000)))
-        vals[0] = id
+        vals[0] = str(id)
 
         id += 1
         datas.append(DbModelR(table, names, vals))
@@ -269,6 +264,6 @@ def __populate_custom(table, cols, row_a):
 
 if __name__ == '__main__':
     # example of dynamic entry
+
     model = create_empty_model('Users', ['Name', 'Age', 'Score'])
     add_models(model)
-
