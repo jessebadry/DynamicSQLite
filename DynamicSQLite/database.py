@@ -63,19 +63,19 @@ def get_column_names(table, c):
     return names
 
 
-def __rechunk(data, rows=10000):
+def __rechunk(data, rows=1000):
     for i in range(0, len(data), rows):
         yield data[i:i + rows]
     # used to re-chunk array into splitNum nths divisions
 
 
 def __insert_all(models_, cur, sql):
-    start = time.perf_counter()
+    
 
     models_values = [list(model.data.values()) for model in models_]  # retrieve all data params from models
 
     if len(models_values) > 1000:
-        models_chunked = list(__rechunk(models_values, 1000))  # Split each row into 1000 rows each list
+        models_chunked = list(__rechunk(models_values))  # Split each row into 1000 rows each list
         models_values.clear()
 
         for data in models_chunked:
