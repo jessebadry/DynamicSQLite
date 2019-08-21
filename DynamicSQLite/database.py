@@ -204,7 +204,7 @@ class DbModelR:
         else:
             self.data = data
         if id:
-            print('getting id')
+            
             if (self.data.get('id') is None) or self.data.get('id').replace(' ', '') == '':
                 self.data['id'] = 0
 
