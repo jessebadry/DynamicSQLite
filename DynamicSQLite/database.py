@@ -94,7 +94,6 @@ def __insert_all(models_, cur, sql):
         cur.execute('COMMIT')
 
 
-
 def compile_insert_sql(insert_method, table, model_record):
     marks = ['?' for x in range(len(model_record.getVals()))]
     params = ','.join(marks)
@@ -143,11 +142,11 @@ def get_last_id(model):
     try:
         cur.execute('SELECT * FROM ' + table + ' ORDER BY id DESC LIMIT 1')
     except sqlite3.OperationalError:
-        return -1
+        return '-1'
 
     records = cur.fetchall()
     if len(records) == 0:
-        return -1
+        return '-1'
     c.close()
 
     return records[0][model.getKeys().index('id')]
@@ -195,7 +194,7 @@ def load_table(table):
 
 
 class DbModelR:
-    def __init__(self, table, data, vals=None):
+    def __init__(self, table, data, vals=None, id=True):
         self.table = table
         if vals is not None:
             self.data = {'id': ''}
@@ -204,11 +203,13 @@ class DbModelR:
 
         else:
             self.data = data
-        if (self.data.get('id') is None) or self.data.get('id').replace(' ', '') == '':
-            self.data['id'] = 0
+        if id:
+            print('getting id')
+            if (self.data.get('id') is None) or self.data.get('id').replace(' ', '') == '':
+                self.data['id'] = 0
 
-            id = str(get_last_id(self) + 1)
-            self.data['id'] = id
+                id = str(int(get_last_id(self)) + 1)
+                self.data['id'] = id
 
     def getVals(self):
         return list(self.data.values())
@@ -265,9 +266,4 @@ def __populate_custom(table, cols, row_a):
 
 if __name__ == '__main__':
     # example of dynamic entry
-    model = create_empty_model('Invoices', 'Name', 'age', 'id')
-
-    add_models(model)
-    invoices = load_table_limit('Invoices', 1000)
-    for invoice in invoices:
-        print(invoice.data)
+    print(get_last_id(DbModelR('Parts', {'invoiceID': ''}, id=False)))
