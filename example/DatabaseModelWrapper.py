@@ -2,7 +2,7 @@ import database
 import models
 
 
-# Wrapper for the dynamo database
+# Wrapper for the DSQLite
 def __populate_invoices():
     database.__populate_custom('Invoices', models.InvoiceNames, 100)
 
