@@ -14,7 +14,19 @@ def create_empty_model(table, *columns):
     data = {}
     for col in columns:
         data[col] = None
-    return DbModelR(table, data)
+    return DbModelR(table, data, use_id=False)
+
+
+def quote(string):
+    return '\'' + string + '\''
+
+
+#  basic params for SQLite e.g (update movies SET author = Jeff, producer  = Leonard ect..)
+def compile_basic_params(cols, vals):
+    cols = ''.join([col + ' = ' + quote(vals[index]) + ',' for index, col in enumerate(cols)])
+    cols = cols[:len(cols) - 1]
+
+    return cols
 
 
 def check_table(model):
@@ -37,24 +49,29 @@ def check_table(model):
     c.close()
 
 
-def get_sql_vals(record):
-    vals = ''
-    vals += '('
-    for val in record.data.keys():
-        vals += val + ','
-
-    vals = vals[:len(vals) - 1]
-
-    vals += ')'
-
-    return vals
-
-
 def run_query(sql):
     c = sqlite3.connect('db.sqlite3')
     c.execute(sql)
     c.commit()
     c.close()
+
+
+# Updates columns of specified row
+def update(table, r_cols, r_vals, where_condition='', where_val='', extra_sql=''):
+    if len(r_cols) != len(r_vals):
+
+        raise Exception("Not matching columns to values, {} columns {} values".format(len(r_cols), len(r_vals)))
+    else:
+        sql = 'UPDATE ' + table + ' SET '
+        params = compile_basic_params(r_cols, r_vals)
+
+        sql += params + ' '
+        if where_condition != '' and where_val != '':
+            where_condition = 'WHERE ' + where_condition + ' = ' + where_val
+
+        sql += where_condition + ' ' + extra_sql
+
+        run_query(sql)
 
 
 def get_column_names(table, c):
@@ -92,6 +109,19 @@ def __insert_all(models_, cur, sql):
         cur.execute('COMMIT')
 
 
+def get_sql_vals(record):
+    vals = ''
+    vals += '('
+    for val in record.data.keys():
+        vals += val + ','
+
+    vals = vals[:len(vals) - 1]
+
+    vals += ')'
+
+    return vals
+
+
 def compile_insert_sql(insert_method, table, model_record):
     marks = ['?' for x in range(len(model_record.getVals()))]
     params = ','.join(marks)
@@ -100,8 +130,8 @@ def compile_insert_sql(insert_method, table, model_record):
     return insert_method + ' into {} {} values({}) '.format(table, val_names, params)
 
 
-def __init_model(models):
-    model_record = models[0]
+# gets model details from model
+def __init_model(model_record):
     tb = model_record.table
     check_table(model_record)
     return model_record, tb
@@ -110,12 +140,13 @@ def __init_model(models):
 def add_models(models_):
     # data is modeled by first entry in list
 
+    # multi use for single and multi inserts
     if isinstance(models_, DbModelR):
         models_ = [models_]
     elif len(models_) == 0:
         return
 
-    model_record, table = __init_model(models_)
+    model_record, table = __init_model(models_[0])
     sql = compile_insert_sql('insert or replace ', table, model_record)
 
     c = sqlite3.connect('db.sqlite3')
@@ -126,10 +157,11 @@ def add_models(models_):
     c.close()
 
 
-def find(table, condition_val, condition=None):
-    if condition is None:
-        condition = 'id'  # defaults id
-    sql = 'Select * from ' + table + ' where {} = {}'.format(condition, condition_val)
+# Where conditional find
+def find(table, condition_val, condition='id', additional_trail_sql=''):
+    sql = 'Select * from ' + table + ' where {} = {} '.format(condition, condition_val)
+    sql += additional_trail_sql
+
     return fetch_items(table, sql)
 
 
@@ -146,8 +178,10 @@ def get_last_id(model):
     if len(records) == 0:
         return '-1'
     id_ = str(records[0][model.getKeys().index('id')])
-
-    if (id_ is None) or id_.replace(' ', '') == '':
+    # 'last id = ', id_)
+    if (id_ is None):
+        return '-1'
+    elif id_.replace(' ', '') == '':
         return '-1'
     else:
         return id_
@@ -163,8 +197,7 @@ def fetch_items(table, sql):
 
     records_converted = []
     data = {}
-    for name in names:
-        data[name] = None
+
     for record in records:
 
         for index, name in enumerate(names):
@@ -179,8 +212,8 @@ def fetch_items(table, sql):
     return records_converted
 
 
-def load_table_limit(table, limit):
-    sql = 'SELECT * FROM ' + table + ' ORDER BY id ASC LIMIT ' + str(limit)
+def load_table_limit(table, limit, order='DESC'):
+    sql = 'SELECT * FROM ' + table + ' ORDER BY id ' + order + ' LIMIT ' + str(limit)
     items = fetch_items(table, sql)
     return items
 
@@ -192,7 +225,7 @@ def load_table(table):
 
 
 class DbModelR:
-    def __init__(self, table, data, vals=None, id=True):
+    def __init__(self, table, data, vals=None, use_id=True):
         self.table = table
         if vals is not None:
             self.data = {'id': ''}
@@ -201,13 +234,16 @@ class DbModelR:
 
         else:
             self.data = data
-        if id:
+        if use_id:
 
-            if (self.data.get('id') is None) or self.data.get('id').replace(' ', '') == '':
+            if (self.data.get('id') is None) or (self.data.get('id').replace(' ', '') == '') \
+                    and (self.data['id']):
                 self.data['id'] = 0
 
-                id = str(int(get_last_id(self)) + 1)
-                self.data['id'] = id
+                id_ = get_last_id(self)
+
+                id_ = str(int(id_) + 1)
+                self.data['id'] = id_
 
     def getVals(self):
         return list(self.data.values())
@@ -263,7 +299,4 @@ def __populate_custom(table, cols, row_a):
 
 
 if __name__ == '__main__':
-    # example of dynamic entry
-
-    model = create_empty_model('Users', ['Name', 'Age', 'Score'])
-    add_models(model)
+    pass
