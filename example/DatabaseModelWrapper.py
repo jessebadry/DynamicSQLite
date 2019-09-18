@@ -66,5 +66,4 @@ def get_customers(limit):
     return customers
 
 
-if __name__ == '__main__':
-    print(last_id('Parts', 'invoiceID', '0', 'id'))
+
