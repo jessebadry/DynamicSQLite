@@ -34,6 +34,7 @@ def remove_model(model):
     c.commit()
     c.close()
 
+
 # basic params for SQLite e.g (update movies SET author = Jeff, producer  = Leonard ect..)
 def compile_basic_params(cols, vals, delim=','):
     cols = ''.join([col + ' = ' + quote(vals[index]) + delim for index, col in enumerate(cols)])
@@ -62,7 +63,7 @@ def check_table(model):
         col = col.replace(' ', '')
 
         if col == 'id':
-            sql += col + ' INTEGER PRIMARY KEY AUTOINCREMENT,'
+            sql += col + '  INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,'
         else:
             sql += col + ' TEXT,'
     sql = sql[:len(sql) - 1]
@@ -132,6 +133,7 @@ def __insert_all(models_, cur, sql):
     else:
         cur.execute('BEGIN TRANSACTION')
         for row in models_values:
+            print(sql, row)
             cur.execute(sql, row)
 
         cur.execute('COMMIT')
@@ -141,6 +143,7 @@ def get_sql_vals(record):
     keys = list(record.data.keys())
     warning_bool = False
     id_missing = False
+
     if not ('id' in keys):
         keys.append('id')
         id_missing = True
@@ -315,7 +318,7 @@ class DModel:
         self.table = table
 
         if vals is not None:
-            self.data = {'id': None}
+            self.data = {}
             for index, col in enumerate(data):
                 self.data[col] = vals[index]
 
@@ -327,6 +330,11 @@ class DModel:
         return "Model(Table->'{}'  Data: {}".format(self.table, self.data)
 
     def getVals(self):
+        data = self.data.copy()
+        if data.get('id') is not None:
+            if data['id'].replace(' ', '') == '':
+                data.pop('id')
+
         return list(self.data.values())
 
     def getKeys(self):
