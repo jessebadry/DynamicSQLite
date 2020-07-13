@@ -133,7 +133,6 @@ def __insert_all(models_, cur, sql):
     else:
         cur.execute('BEGIN TRANSACTION')
         for row in models_values:
-            print(sql, row)
             cur.execute(sql, row)
 
         cur.execute('COMMIT')
