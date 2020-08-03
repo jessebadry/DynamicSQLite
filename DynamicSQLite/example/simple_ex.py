@@ -5,7 +5,7 @@ class Customer(DModel):
     def __init__(self, name, address):
         self.name = name
         self.address = address
-        super(Customer, self).__init__(TABLE, self.__dict__.copy())
+        super(Customer, self).__init__(self.TABLE, self.__dict__.copy())
 
 
 
