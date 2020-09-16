@@ -2,7 +2,7 @@
 DynamicSQLite makes it easy to save data to a database!
 
 # Example
-```
+```python
 from DynamicSQLite import database
 from DynamicSQLite.database import DModel
 class Customer(DModel):
