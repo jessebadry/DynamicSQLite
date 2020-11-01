@@ -1,7 +1,9 @@
 
 DynamicSQLite makes it easy to save data to a single static database!
 
-The default name is db.sqlite
+The default name is db.sqlite3,
+which you can modify `DEFAULT_DB` within database.py
+
 
 # Example
 ```python
