@@ -1,5 +1,7 @@
 
-DynamicSQLite makes it easy to save data to a database!
+DynamicSQLite makes it easy to save data to a single static database!
+
+The default name is db.sqlite
 
 # Example
 ```python
