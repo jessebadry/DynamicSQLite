@@ -1,5 +1,7 @@
 
-DynamicSQLite makes it easy to save data to a single static database!
+DynamicSQLite is a light-weight (but very limited) ORM.
+
+It's very limited as it's only supported data-type is strings, but is open for modification for data-conversion.
 
 The default name is db.sqlite3,
 which you can modify `DEFAULT_DB` within database.py
