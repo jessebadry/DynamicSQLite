@@ -1,5 +1,6 @@
 
-DynamicSQLite is a light-weight (but very limited) ORM.
+DynamicSQLite is a light-weight (but very limited) ORM I developed in High-School, and was used in a python rewrite of an invoicing system.
+
 
 It's very limited as it's only supported data-type is strings, but is open for modification for data-conversion.
 
